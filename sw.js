@@ -1,4 +1,4 @@
-const CACHE='rotapro-facil-v1-1';
+const CACHE='rotapro-facil-v1-2';
 const TILE_CACHE='rotapro-facil-map-v1';
 const ASSETS=['./','./index.html','./style.css','./app.js','./manifest.json','./logo.png','./icon-192.png','./icon-512.png','./header-banner.png','./facil.css','./facil.js',
  'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css',

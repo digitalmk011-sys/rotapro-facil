@@ -12,3 +12,7 @@ body.facil-workspace:not(.facil-advanced) .homeStats,body.facil-workspace:not(.f
 body.facil-workspace:not(.facil-advanced) main>.card:not(.homeDashboard),body.facil-workspace:not(.facil-advanced) main>section:not(.homeDashboard){display:none!important}
 body.facil-workspace:not(.facil-advanced)>nav{display:none!important}
 body.facil-workspace:not(.facil-advanced)>header{display:none!important}
+
+/* V1.2: botão de limpeza visível com confirmação */
+.facil-route-actions .facil-route-danger{border:2px solid #b91c1c;color:#b91c1c;background:#fff8f8}
+.facil-route-actions .facil-route-danger small{color:#9f3434}
