@@ -1,0 +1,30 @@
+ROTAPRO 1.3 — SEQUENCE COMO IDENTIFICADOR PRINCIPAL
+
+NOVIDADES
+- Sequence passou a ser o número principal da encomenda.
+- Stop foi retirado da interface e não é usado para identificar a entrega.
+- Botão "Corrigir Sequence" para preencher/corrigir todas as entregas.
+- "Preencher faltantes" sugere automaticamente números ainda não usados.
+- Bloqueio de Sequences duplicadas ao salvar.
+- Entregas sem Sequence ficam destacadas até serem corrigidas.
+- Sequence aparece na lista, no mapa, nos detalhes e na exportação.
+- Mantidos mapa, GPS em tempo real, seleção manual, confirmação de entrega e otimização.
+
+PLANILHA COMPATÍVEL
+AT ID | Sequence | SPX TN | Destination Address | Bairro | City | Zipcode/Postal code | Latitude | Longitude
+
+IMPORTANTE
+A Sequence é a referência que acompanha a encomenda. O endereço completo é mostrado ao tocar no ponto do mapa e fica em destaque para conferência no local. Mesmo que a rota seja otimizada e a ordem das entregas mude, o endereço continua vinculado à sua Sequence.
+
+PARA ATUALIZAR O GITHUB
+1. Extraia este ZIP.
+2. Envie os arquivos para o repositório rotapro2.
+3. Substitua os arquivos antigos.
+4. Aguarde o GitHub Pages atualizar.
+5. Se o celular continuar mostrando a versão antiga, feche a página/PWA e abra novamente.
+
+
+ROTA PRO 2.9
+- Seguir posição e Otimizar aparecem normalmente na tela do mapa.
+- Ao tocar em uma entrega/endereço, os controles do mapa desaparecem e ficam apenas Sequence, Destination Address e confirmação.
+- O mapa aceita rotação com dois dedos no celular; a bússola no canto superior direito restaura o norte.
