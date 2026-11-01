@@ -2,7 +2,7 @@
 <html lang="pt-BR"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#061d38"><link rel="manifest" href="manifest.json">
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"><link rel="stylesheet" href="style.css"><link rel="stylesheet" href="facil.css"><title>RotaPro Fácil 1.0</title></head>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"><link rel="stylesheet" href="style.css"><link rel="stylesheet" href="facil.css"><title>RotaPro Fácil 1.1</title></head>
 <body class="facil-mode">
 <section id="facilHome" class="facil-home" aria-label="Início RotaPro Fácil">
   <div class="facil-brand">🚚 <strong>RotaPro <span>Fácil</span></strong><small>Seu assistente de entregas</small></div>
@@ -20,6 +20,11 @@
   <div class="homeStats"><div><b id="total">0</b><small>ENTREGAS</small></div><div><b id="done">0</b><small>CONCLUÍDAS</small></div><div><b id="remaining">0</b><small>PENDENTES</small></div></div>
   <div class="stopStatsHome" aria-live="polite">📍 <b id="homeStopsTotal">0</b> paradas totais · <b id="homeStopsPending">0</b> pendentes</div>
   <div class="homeProgress"><span>PROGRESSO DA ROTA</span><strong id="homeProgressText">0%</strong><div class="progress"><i id="bar"></i></div></div>
+  <div class="facil-route-actions" aria-label="Ações principais da rota">
+    <button id="facilMapBtn" class="facil-route-primary" type="button">🗺️ <strong>VER NO MAPA</strong><small>Visualizar entregas e começar</small></button>
+    <button id="facilSequenceBtn" type="button">🔢 <strong>CORRIGIR SEQUENCE</strong><small>Conferir pacotes sem numeração</small></button>
+    <button id="facilManualBtn" type="button">➕ <strong>ADICIONAR ENTREGA</strong><small>Cadastrar um novo pacote</small></button>
+  </div>
   <div class="homeActionGrid">
     <button id="homeImportBtn" class="homeAction actionExcel"><span class="actionIcon">▣</span><span><b>Importar Planilha</b><small>Excel / XLSX</small></span></button>
     <button id="homeSequenceBtn" class="homeAction actionAlert"><span class="actionIcon">!</span><span><b id="homeAddedText">Adicionados (0)</b><small>Entregas sem Sequence</small></span></button>
