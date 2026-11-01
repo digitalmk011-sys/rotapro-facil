@@ -111,7 +111,7 @@ function sequenceNumber(d){let n=Number(cleanSequence(d.sequence));return Number
 function sequenceLabel(d,i){return cleanSequence(d.sequence)||"Sem Seq."}
 function missingSequenceCount(){return deliveries.filter(d=>!cleanSequence(d.sequence)).length}
 function duplicateSequences(){let mapSeq=new Map();deliveries.forEach((d,i)=>{let s=cleanSequence(d.sequence);if(s){if(!mapSeq.has(s))mapSeq.set(s,[]);mapSeq.get(s).push(i)}});return new Set([...mapSeq.values()].filter(a=>a.length>1).flat())}
-function sequenceIssue(i){let d=deliveries[i];return !cleanSequence(d.sequence)||duplicateSequences().has(i)}
+function sequenceIssue(i){let d=deliveries[i];return !cleanSequence(d.sequence)||sequenceNumber(d)===null||duplicateSequences().has(i)}
 function addDelivery(){let client=val("client"),address=val("address"),phone=val("phone"),sequence=cleanSequence(val("manualSequence"));if(!sequence){alert("Informe a Sequence da entrega.");document.getElementById("manualSequence").focus();return}if(!address){alert("Informe o endereço completo da entrega.");document.getElementById("address").focus();return}if(deliveries.some(d=>cleanSequence(d.sequence)===sequence)){alert("A Sequence "+sequence+" já está cadastrada. Informe uma Sequence diferente.");document.getElementById("manualSequence").focus();return}deliveries.push({client:client||"Entrega "+sequence,address,destinationAddress:address,bairro:"",city:"",zip:"",phone,obs:"",code:"",lat:"",lon:"",sequence,originalSequence:sequence,originalStop:"",done:false,routeOrder:""});planFacilSequence();replanFacilWithGeocoding();["client","address","phone","manualSequence"].forEach(id=>document.getElementById(id).value="");save();toast("Entrega "+sequence+" adicionada com sucesso!");document.getElementById("manualSequence").focus()}
 function coords(d){let lat=parseFloat(String(d.lat).replace(",",".")),lon=parseFloat(String(d.lon).replace(",","."));return Number.isFinite(lat)&&Number.isFinite(lon)?[lat,lon]:null}
 function pending(){return deliveries.filter(d=>!d.done)}
@@ -719,7 +719,7 @@ function importFile(ev){const f=ev.target.files[0];if(!f)return;if(/\.csv$/i.tes
 function norm(s){return String(s??"").trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]+/g," ")}
 function key(keys,names){let n=names.map(norm);return keys.find(k=>n.includes(norm(k)))||null}
 function importExcel(rows){if(!rows.length){alert("Planilha vazia.");return}let keys=Object.keys(rows[0]),ak=key(keys,["Destination Address","Endereço","Endereco","Address"]),ck=key(keys,["SPX TN","Tracking","Tracking Number","Código","Codigo"]),bk=key(keys,["Bairro"]),city=key(keys,["City","Cidade"]),zip=key(keys,["Zipcode/Postal code","CEP","Zipcode"]),lat=key(keys,["Latitude","Lat"]),lon=key(keys,["Longitude","Long","Lon"]),seq=key(keys,["Sequence","Sequencia","Sequência"]),stop=key(keys,["Stop"]);if(!ak){alert("Não encontrei Destination Address.");return}let n=0;rows.forEach((r,i)=>{let raw=String(r[ak]??"").trim();if(!raw)return;let s=cleanSequence(seq?r[seq]:"");let parts=[raw,bk?r[bk]:"",city?r[city]:"",zip?r[zip]:""].map(x=>String(x??"").trim()).filter(Boolean);deliveries.push({client:ck?String(r[ck]||""):"Entrega "+(i+1),address:[...new Set(parts)].join(", "),destinationAddress:raw,bairro:bk?String(r[bk]||"").trim():"",city:city?String(r[city]||"").trim():"",zip:zip?String(r[zip]||"").trim():"",phone:"",obs:s?`Sequence: ${s}`:"",code:ck?String(r[ck]||""):"",lat:lat?String(r[lat]||""):"",lon:lon?String(r[lon]||""):"",sequence:s,originalSequence:s,originalStop:stop?String(r[stop]||""):"",done:false,routeOrder:""});n++});planFacilSequence();save();warmOfflineMap();toast(n+" entregas importadas — rota organizada por Sequence");
- replanFacilWithGeocoding().then(()=>window.dispatchEvent(new CustomEvent("facil:imported"))).catch(()=>window.dispatchEvent(new CustomEvent("facil:imported")));document.body.classList.remove("facil-advanced");window.scrollTo(0,0);if(missingSequenceCount())toast("Há pacotes sem Sequence: use Corrigir Sequence")}
+ window.dispatchEvent(new CustomEvent("facil:imported",{detail:{added:n}}));replanFacilWithGeocoding().catch(e=>console.warn("Planejamento por proximidade indisponível",e));document.body.classList.remove("facil-advanced");window.scrollTo(0,0);if(missingSequenceCount())toast("Há pacotes sem Sequence: use Corrigir Sequence")}
 function importCSV(){alert("Para este modelo de entrega, prefira o Excel .xlsx.")}
 function downloadTemplate(){if(!XLSX)return;let ws=XLSX.utils.aoa_to_sheet([["AT ID","Sequence","Stop","SPX TN","Destination Address","Bairro","City","Zipcode/Postal code","Latitude","Longitude"],["AT20260919A130T",1,1,"BR000000000000","Rua Exemplo, 100","Centro","Santa Fé","86770-000",-23.03849,-51.8018]]),wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,"Sheet1");XLSX.writeFile(wb,"modelo-rotapro.xlsx")}
 function exportCSV(){let rows=[["Rota","Sequence","SPX TN","Endereço","Latitude","Longitude","Status"],...deliveries.map(d=>[d.routeOrder||"",cleanSequence(d.sequence)||"",d.code||"",d.address,d.lat||"",d.lon||"",d.done?"Entregue":"Pendente"])];download("rotapro-facil-rota.csv","\ufeff"+rows.map(r=>r.map(x=>`"${String(x??"").replaceAll('"','""')}"`).join(";")).join("\n"),"text/csv")}
@@ -741,12 +741,55 @@ function clearAll(){
 function openSequenceEditor(){renderSequenceEditor();document.getElementById("sequenceModal").classList.add("open");document.getElementById("sequenceModal").setAttribute("aria-hidden","false")}
 function closeSequenceEditor(){document.getElementById("sequenceModal").classList.remove("open");document.getElementById("sequenceModal").setAttribute("aria-hidden","true")}
 function editSequence(i){openSequenceEditor();setTimeout(()=>{let el=document.querySelector(`#seqInput_${i}`);if(el){el.focus();el.select()}},60)}
-function renderSequenceEditor(){const box=document.getElementById("sequenceEditorList");box.innerHTML="";deliveries.forEach((d,i)=>{let issue=sequenceIssue(i),s=cleanSequence(d.sequence);let row=document.createElement("div");row.className="seqRow"+(issue?" issue":"");row.innerHTML=`<div class="seqInfo"><b>${esc(d.code||d.client)}</b><small>${esc(d.address)}</small>${issue?`<span>${!s?"⚠ Sem Sequence":"⚠ Sequence duplicada"}</span>`:""}</div><input id="seqInput_${i}" class="seqInput" inputmode="text" autocapitalize="characters" value="${esc(s)}" placeholder="Sequence"><button onclick="focusSequence(${i})">✏️</button>`;box.appendChild(row)});updateSequenceEditorStats()}
+function renderSequenceEditor(){
+ const box=document.getElementById("sequenceEditorList");box.innerHTML="";
+ const dup=duplicateSequences();
+ deliveries.forEach((d,i)=>{
+  if(!sequenceIssue(i))return;
+  const s=cleanSequence(d.sequence),row=document.createElement("div");row.className="seqRow issue";
+  const reason=!s?"⚠ Sem Sequence":sequenceNumber(d)===null?"⚠ Sequence inválida":"⚠ Sequence duplicada";
+  row.innerHTML=`<div class="seqInfo"><b>${esc(d.code||d.client)}</b><small>${esc(d.address)}</small><span>${reason}</span></div><input id="seqInput_${i}" class="seqInput" inputmode="text" autocapitalize="characters" value="${esc(s)}" placeholder="Sequence"><button onclick="focusSequence(${i})">✏️</button>`;
+  box.appendChild(row);
+ });
+ if(!box.children.length)box.innerHTML='<div class="empty">✅ Todas as Sequence estão conferidas! Não há pendências.</div>';
+ updateSequenceEditorStats();
+}
 function focusSequence(i){let el=document.getElementById(`seqInput_${i}`);if(el){el.focus();el.select()}}
-function collectSequenceInputs(){let used=new Map(),changes=[];for(let i=0;i<deliveries.length;i++){let el=document.getElementById(`seqInput_${i}`);let s=cleanSequence(el?el.value:deliveries[i].sequence);if(s&&/[\r\n]/.test(s)){alert(`Sequence inválida na entrega ${i+1}. Não use quebra de linha.`);return null}if(s){if(used.has(s)){alert(`A Sequence ${s} está repetida. Cada entrega deve ter uma Sequence diferente.`);return null}used.set(s,i)}changes.push(s)}return changes}
-function saveSequences(){let values=collectSequenceInputs();if(!values)return;values.forEach((s,i)=>{deliveries[i].sequence=s});planFacilSequence();save();replanFacilWithGeocoding();closeSequenceEditor();toast(missingSequenceCount()?"Ainda existem entregas sem Sequence":"Sequences corrigidas e salvas");if(missingSequenceCount())setTimeout(openSequenceEditor,250)}
-function fillMissingSequences(){let used=new Set(deliveries.map(d=>Number(cleanSequence(d.sequence))).filter(n=>Number.isInteger(n)&&n>0));let next=1,filled=0;deliveries.forEach((d,i)=>{if(!cleanSequence(d.sequence)){while(used.has(next)||used.has(`+${next}`))next++;let value=`+${next}`;let el=document.getElementById(`seqInput_${i}`);if(el)el.value=value;used.add(value);used.add(next);next++;filled++}});updateSequenceEditorStats();toast(filled?`${filled} Sequence(s) preenchidas automaticamente na ordem da lista.`:"Não há Sequence faltando.")}
-function updateSequenceEditorStats(){let inputs=[...document.querySelectorAll(".seqInput")];let missing=inputs.filter(x=>!cleanSequence(x.value)).length;document.getElementById("editorMissing").textContent=missing;document.getElementById("editorTotal").textContent=inputs.length}
+function collectSequenceInputs(){
+ const values=deliveries.map(d=>cleanSequence(d.sequence));
+ document.querySelectorAll("#sequenceEditorList .seqInput").forEach(el=>{
+  const i=Number(el.id.replace("seqInput_",""));values[i]=cleanSequence(el.value);
+ });
+ const used=new Set();
+ for(let i=0;i<values.length;i++){
+  const s=values[i];if(!s)continue;
+  if(/[\r\n]/.test(s)||!(Number(s)>0&&Number.isFinite(Number(s)))){alert(`Sequence inválida na entrega ${i+1}. Informe um número positivo ou deixe em branco.`);return null}
+  const key=String(Number(s));if(used.has(key)){alert(`A Sequence ${s} está repetida. Cada entrega deve ter uma Sequence diferente.`);return null}used.add(key);
+ }
+ return values;
+}
+function saveSequences(){
+ const values=collectSequenceInputs();if(!values)return;
+ values.forEach((s,i)=>{deliveries[i].sequence=s});planFacilSequence();save();replanFacilWithGeocoding();
+ const pending=deliveries.filter((d,i)=>sequenceIssue(i)).length;
+ if(pending){renderSequenceEditor();toast(`${pending} Sequence(s) ainda precisam de correção`)}
+ else{closeSequenceEditor();toast("Todas as Sequence estão conferidas!")}
+}
+function fillMissingSequences(){
+ const used=new Set(deliveries.map(d=>Number(cleanSequence(d.sequence))).filter(n=>Number.isInteger(n)&&n>0));
+ let next=1,filled=0;
+ document.querySelectorAll("#sequenceEditorList .seqInput").forEach(el=>{
+  if(cleanSequence(el.value))return;
+  while(used.has(next))next++;
+  el.value=String(next);used.add(next);next++;filled++;
+ });
+ updateSequenceEditorStats();toast(filled?`${filled} Sequence(s) sugeridas. Confira antes de salvar.`:"Não há Sequence vazia na lista.");
+}
+function updateSequenceEditorStats(){
+ const inputs=[...document.querySelectorAll("#sequenceEditorList .seqInput")];
+ document.getElementById("editorMissing").textContent=inputs.filter(x=>!cleanSequence(x.value)).length;
+ document.getElementById("editorTotal").textContent=inputs.length;
+}
 
 function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
 let toastTimer;function toast(t){let x=document.getElementById("toast");x.textContent=t;x.classList.add("show");clearTimeout(toastTimer);toastTimer=setTimeout(()=>x.classList.remove("show"),2600)}
@@ -758,7 +801,7 @@ document.getElementById("homeSequenceBtn")?.addEventListener("click",openSequenc
 document.getElementById("homeListBtn")?.addEventListener("click",()=>document.getElementById("list")?.scrollIntoView({behavior:"smooth",block:"start"}));
 document.getElementById("homeManualBtn")?.addEventListener("click",()=>document.getElementById("importSection")?.scrollIntoView({behavior:"smooth",block:"center"}));
 document.getElementById("homeClearBtn")?.addEventListener("click",clearAll);
-document.getElementById("file").addEventListener("change",importFile);document.getElementById("optBtn").addEventListener("click",optimizeRoute);document.getElementById("optStopsBtn")?.addEventListener("click",optimizeByStops);document.getElementById("navOptimize").addEventListener("click",optimizeRoute);document.getElementById("clearRouteBtn").addEventListener("click",restoreOriginal);document.getElementById("locateBtn").addEventListener("click",locate);document.getElementById("followMapBtn")?.addEventListener("click",toggleMapFollow);document.getElementById("mapOptimizeBtn")?.addEventListener("click",optimizeRoute);document.getElementById("openMapBtn").addEventListener("click",openMap);document.getElementById("navMap").addEventListener("click",openMap);document.getElementById("closeMap").addEventListener("click",closeMap);document.getElementById("centerMap").addEventListener("click",()=>{followUser=true;if(currentPosition)map.setView(currentPosition,16,{animate:true});else{let d=nextDelivery(),c=d&&coords(d);if(c)map.setView(c,16)}});document.getElementById("showDone").addEventListener("change",e=>{showDone=e.target.checked;drawMap()});document.getElementById("routeTab").addEventListener("click",()=>{sortMode="route";document.getElementById("routeTab").classList.add("active");document.getElementById("originalTab").classList.remove("active");render()});document.getElementById("originalTab").addEventListener("click",()=>{sortMode="original";document.getElementById("originalTab").classList.add("active");document.getElementById("routeTab").classList.remove("active");render()});document.getElementById("nextNavigate").addEventListener("click",()=>{let d=nextDelivery();if(d)navigate(deliveries.indexOf(d))});document.getElementById("nextDone").addEventListener("click",()=>{let d=nextDelivery();if(d)toggle(deliveries.indexOf(d))});document.getElementById("sequenceBtn").addEventListener("click",openSequenceEditor);document.getElementById("closeSequenceModal").addEventListener("click",closeSequenceEditor);document.getElementById("fillSequencesBtn").addEventListener("click",fillMissingSequences);document.getElementById("saveSequencesBtn").addEventListener("click",saveSequences);document.getElementById("sequenceModal").addEventListener("click",e=>{if(e.target.id==="sequenceModal")closeSequenceEditor()});document.getElementById("closeAddressAlertModal")?.addEventListener("click",closeAddressAlerts);document.getElementById("addressAlertModal")?.addEventListener("click",e=>{if(e.target.id==="addressAlertModal")closeAddressAlerts()});if("serviceWorker"in navigator)navigator.serviceWorker.register("sw.js?v=facil1-2-2");updateFollowButton();render();
+document.getElementById("file").addEventListener("change",importFile);document.getElementById("optBtn").addEventListener("click",optimizeRoute);document.getElementById("optStopsBtn")?.addEventListener("click",optimizeByStops);document.getElementById("navOptimize").addEventListener("click",optimizeRoute);document.getElementById("clearRouteBtn").addEventListener("click",restoreOriginal);document.getElementById("locateBtn").addEventListener("click",locate);document.getElementById("followMapBtn")?.addEventListener("click",toggleMapFollow);document.getElementById("mapOptimizeBtn")?.addEventListener("click",optimizeRoute);document.getElementById("openMapBtn").addEventListener("click",openMap);document.getElementById("navMap").addEventListener("click",openMap);document.getElementById("closeMap").addEventListener("click",closeMap);document.getElementById("centerMap").addEventListener("click",()=>{followUser=true;if(currentPosition)map.setView(currentPosition,16,{animate:true});else{let d=nextDelivery(),c=d&&coords(d);if(c)map.setView(c,16)}});document.getElementById("showDone").addEventListener("change",e=>{showDone=e.target.checked;drawMap()});document.getElementById("routeTab").addEventListener("click",()=>{sortMode="route";document.getElementById("routeTab").classList.add("active");document.getElementById("originalTab").classList.remove("active");render()});document.getElementById("originalTab").addEventListener("click",()=>{sortMode="original";document.getElementById("originalTab").classList.add("active");document.getElementById("routeTab").classList.remove("active");render()});document.getElementById("nextNavigate").addEventListener("click",()=>{let d=nextDelivery();if(d)navigate(deliveries.indexOf(d))});document.getElementById("nextDone").addEventListener("click",()=>{let d=nextDelivery();if(d)toggle(deliveries.indexOf(d))});document.getElementById("sequenceBtn").addEventListener("click",openSequenceEditor);document.getElementById("closeSequenceModal").addEventListener("click",closeSequenceEditor);document.getElementById("fillSequencesBtn").addEventListener("click",fillMissingSequences);document.getElementById("saveSequencesBtn").addEventListener("click",saveSequences);document.getElementById("sequenceModal").addEventListener("click",e=>{if(e.target.id==="sequenceModal")closeSequenceEditor()});document.getElementById("closeAddressAlertModal")?.addEventListener("click",closeAddressAlerts);document.getElementById("addressAlertModal")?.addEventListener("click",e=>{if(e.target.id==="addressAlertModal")closeAddressAlerts()});if("serviceWorker"in navigator)navigator.serviceWorker.register("sw.js?v=facil1-2-3");updateFollowButton();render();
 
 // RotaPro 2.4 - instalação PWA
 let deferredInstallPrompt=null;

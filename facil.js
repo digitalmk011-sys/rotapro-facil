@@ -1,17 +1,17 @@
 (()=>{'use strict';const $=id=>document.getElementById(id);const steps=[['📱','Abra o RotaPro Fácil','Toque em INICIAR ENTREGAS para começar.'],['📊','Importe sua planilha','Escolha um arquivo Excel ou CSV com os endereços e as Sequence.'],['🔢','Confira a Sequence','As Sequence válidas seguem 1, 2, 3... Entregas sem numeração precisam de conferência e correção.'],['🗺️','Veja a próxima entrega','Abra o mapa, confira o endereço e siga para o destino.'],['✅','Confirme a entrega','Após entregar o pacote, marque como entregue. Confira a Sequence antes de confirmar.']];let step=0;let voiceOn=localStorage.getItem('facil_voice')!=='off';function speak(s){if(!voiceOn||!('speechSynthesis'in window))return;try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(s);u.lang='pt-BR';u.rate=.95;speechSynthesis.speak(u)}catch(e){}}function voiceLabel(){$('facilVoice').textContent=voiceOn?'🔊 Silenciar voz':'🔇 Ativar voz'}voiceLabel();function workspace(advanced=false){document.body.classList.add('facil-workspace');document.body.classList.toggle('facil-advanced',advanced);$('facilToolbar').hidden=false;window.scrollTo(0,0)}function home(){document.body.classList.remove('facil-workspace','facil-advanced');$('facilToolbar').hidden=true;window.scrollTo(0,0)}function start(){workspace();if(typeof deliveries!=='undefined'&&deliveries.length){speak('Sua rota está carregada. Confira a próxima entrega.');window.scrollTo(0,0)}else{workspace(true);speak('Agora selecione sua planilha de entregas.');$('file')?.click()}}function showStep(){const s=steps[step];$('facilStepImage').textContent=s[0];$('facilStepTitle').textContent=s[1];$('facilStepText').textContent=s[2];$('facilStepCount').textContent=(step+1)+' de '+steps.length;$('facilPrev').disabled=step===0;$('facilNext').textContent=step===steps.length-1?'Concluir':'Próximo →';speak(s[1]+'. '+s[2])}
 function updateSequenceWarning(){
  const b=$('facilSequenceBtn');if(!b)return;
- const count=typeof deliveries==='undefined'?0:deliveries.filter(d=>!d.done&&!cleanSequence(d.sequence)).length;
- const duplicates=typeof duplicateSequences==='function'?duplicateSequences().size:0;
- const total=count+duplicates;
+ const count=typeof deliveries==='undefined'?0:deliveries.filter((d,i)=>!d.done&&sequenceIssue(i)).length;
+ const total=count;
  let tag=$('facilSequenceWarning');
  if(!tag){tag=document.createElement('span');tag.id='facilSequenceWarning';tag.className='facil-sequence-warning';b.appendChild(tag)}
  tag.hidden=!total;tag.textContent=total?'⚠ '+total+' para conferir':'';
 }
-window.addEventListener('facil:imported',()=>{
+window.addEventListener('facil:imported',event=>{
  workspace(false);updateSequenceWarning();
  $('facilStatus').textContent=deliveries.length+' entregas carregadas';
- speak('Sua planilha foi importada com sucesso! Você deseja corrigir a sequência dos pacotes ou prefere visualizar suas entregas no mapa?');
+ const added=Number(event.detail?.added)||0;const issues=deliveries.filter((d,i)=>!d.done&&sequenceIssue(i)).length;
+ speak(`Foram adicionados ${added} ${added===1?'pacote':'pacotes'} à sua rota. ${issues?`Existem ${issues} ${issues===1?'Sequence que precisa':'Sequences que precisam'} de conferência. `:''}Você deseja corrigir as sequências dos pacotes adicionados ou visualizar o mapa de entregas?`);
 });
 $('facilMapBtn').onclick=()=>$('openMapBtn').click();
 $('facilClearBtn').onclick=()=>{if(clearAll()){ $('facilStatus').textContent='Nenhuma entrega carregada'; $('facilStart').querySelector('small').textContent='Importar planilha e organizar rota'; home(); updateSequenceWarning(); speak('Rota apagada. Você já pode importar uma nova planilha.'); }};
