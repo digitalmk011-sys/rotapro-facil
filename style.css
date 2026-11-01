@@ -712,3 +712,9 @@ body{
 /* 3.26: oito botoes padronizados e cores distintas */
 .homeActionGrid .actionStops{background:linear-gradient(145deg,#0fabae,#086478)!important}
 .homeActionGrid .actionManual{background:linear-gradient(145deg,#394ce0,#232c91)!important}
+
+/* V1.3 - mapa livre: controles sobrepostos, sem seguir GPS automaticamente */
+.mapModal #map{touch-action:pan-x pan-y;}
+.mapModal .mapActions #startMapBtn{background:#147a43;color:#fff;border:0;font-weight:800;}
+.mapModal .detailBottomActions .detailFollowBtn{background:#147a43!important;color:white!important;}
+.mapModal .mapStopBanner{font-size:12px;max-width:96vw;white-space:normal;text-align:center;}
