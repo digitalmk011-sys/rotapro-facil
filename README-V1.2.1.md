@@ -1,0 +1,1 @@
+RotaPro Fácil V1.2.1 — Correção do botão Limpar Rota. Remove entregas, estado de seleção e dados locais da rota; solicita confirmação; volta à tela inicial e permite importar outra planilha. Não altera o repositório rotapro2.
