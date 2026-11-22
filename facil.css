@@ -66,3 +66,6 @@ body.facil-mode{background:#041631;color:white}body.facil-mode .new-home{max-wid
 .facil-illustration{width:100%!important;border-radius:0!important}
 .facil-illustration img{width:100%!important;height:100%!important;object-fit:fill!important}
 @media(max-width:380px){.facil-lesson-toolbar button{font-size:11px!important}#facilReplay,#facilStopAudio,#facilCloseTutorial{font-size:17px!important}}
+
+/* V1.3.8: contadores compactos ao lado do progresso */
+.new-progress-summary{display:flex;align-items:center;justify-content:flex-end;gap:7px;flex-wrap:wrap}.new-progress-summary span{font-size:11px;letter-spacing:0;color:#fff;background:#064c83;border:1px solid #26caff;border-radius:9px;padding:4px 6px;white-space:nowrap}.new-progress-summary strong{font-size:14px;color:#70f4ff;white-space:nowrap}@media(max-width:390px){.new-progress{grid-template-columns:auto 1fr}.new-progress-summary{gap:4px}.new-progress-summary span{font-size:9px;padding:3px 4px}}

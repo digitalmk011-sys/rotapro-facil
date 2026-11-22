@@ -1,0 +1,5 @@
+RotaPro Fácil V1.3.8
+- Contadores de pacotes totais e entregues ao lado do progresso, atualizados ao confirmar entregas.
+- Após importar planilha, narração orienta Ver no Mapa se não houver pendências ou Corrigir Sequence se houver.
+- A narração pronuncia Sequence como sequência.
+- Publique os arquivos do ZIP no repositório rotapro-facil; o repositório rotapro2 não deve ser alterado.
