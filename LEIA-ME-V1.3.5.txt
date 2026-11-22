@@ -1,0 +1,9 @@
+RotaPro Fácil 1.3.5 - Aula com imagens ampliadas
+
+- 24 imagens da aula mantidas
+- Navegação Anterior/Próximo, ouvir, parar e fechar na mesma linha superior
+- Narração inicia automaticamente ao abrir a aula e ao mudar de imagem, quando o navegador permite síntese de voz
+- Imagem ocupa todo o espaço restante; textos explicativos continuam disponíveis na narração
+- Atualização de cache para 1.3.5
+
+Publicar todos os arquivos e a pasta aula no repositório rotapro-facil. Não alterar rotapro2.
