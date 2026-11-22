@@ -25,7 +25,7 @@ window.addEventListener('facil:imported',event=>{
  $('facilStatus').textContent=message;
  speak(message);
 });
-$('facilMapBtn').onclick=()=>$('openMapBtn').click();
+$('facilMapBtn').onclick=()=>{if(typeof deliveries!=='undefined'&&deliveries.some(d=>!d.done))speak('Agora clique em Iniciar e começaremos a rota. Confira o endereço da primeira entrega no mapa.');$('openMapBtn').click();};
 $('facilClearBtn').onclick=()=>{if(clearAll()){ $('facilStatus').textContent='Nenhuma entrega carregada'; home(); updateSequenceWarning(); speak('Rota apagada. Você já pode importar uma nova planilha.'); }};
 $('facilSequenceBtn').onclick=()=>$('homeSequenceBtn').click();
 $('facilManualBtn').onclick=()=>{workspace(true);$('importSection')?.scrollIntoView({behavior:'smooth',block:'center'});speak('Preencha os dados da nova entrega.');};

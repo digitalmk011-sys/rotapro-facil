@@ -1,0 +1,7 @@
+RotaPro Fácil V1.3.9
+- Contador de pacotes e entregues maior e mais legível.
+- Ao abrir VER NO MAPA, o assistente orienta a clicar em INICIAR.
+- Instalável no Android pelo navegador (Adicionar à tela inicial / Instalar aplicativo).
+- Navegação por voz curva a curva NÃO implementada: exige motor de rotas e instruções de manobras.
+- Chat IA NÃO implementado: exige backend seguro e serviço de IA.
+- Atualize os arquivos no repositório rotapro-facil; não modifique rotapro2.

@@ -69,3 +69,12 @@ body.facil-mode{background:#041631;color:white}body.facil-mode .new-home{max-wid
 
 /* V1.3.8: contadores compactos ao lado do progresso */
 .new-progress-summary{display:flex;align-items:center;justify-content:flex-end;gap:7px;flex-wrap:wrap}.new-progress-summary span{font-size:11px;letter-spacing:0;color:#fff;background:#064c83;border:1px solid #26caff;border-radius:9px;padding:4px 6px;white-space:nowrap}.new-progress-summary strong{font-size:14px;color:#70f4ff;white-space:nowrap}@media(max-width:390px){.new-progress{grid-template-columns:auto 1fr}.new-progress-summary{gap:4px}.new-progress-summary span{font-size:9px;padding:3px 4px}}
+
+/* V1.3.9: painel de progresso ampliado para leitura em campo */
+.new-progress{display:flex;flex-direction:column;align-items:stretch;gap:10px;margin:9px 10px 14px;padding:15px 14px 17px;min-height:132px;border:2px solid #27c9ff;border-radius:19px;background:linear-gradient(155deg,#082c5c,#051a39);box-shadow:0 0 12px #00baff99,inset 0 2px 4px #ffffff24}
+.new-progress>span{font-size:17px;font-weight:950;color:#f6fbff;letter-spacing:.4px}
+.new-progress-summary{display:grid;grid-template-columns:1fr 1fr auto;gap:7px;width:100%;align-items:stretch;justify-content:stretch}
+.new-progress-summary span{display:flex;align-items:center;justify-content:center;min-height:54px;font-size:clamp(13px,3.6vw,18px);font-weight:900;padding:8px 5px;white-space:normal;text-align:center;line-height:1.2;border-radius:12px;background:#09588c}
+.new-progress-summary strong{display:grid;place-items:center;font-size:clamp(17px,4.8vw,23px);color:#fff600}
+.new-progress .new-track{width:100%;height:17px;flex-shrink:0}
+@media(max-width:390px){.new-progress-summary span{font-size:13px;padding:7px 4px}.new-progress-summary{gap:5px}}
