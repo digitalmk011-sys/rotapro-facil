@@ -33,7 +33,7 @@ function planFacilSequence(){
  // Sequence numerada = espinha dorsal; sem Sequence = parada extra por proximidade.
  // Agrupamento por endereco evita separar pacotes no mesmo local.
  const groups=stopGroups().filter(g=>g.indexes.some(i=>!deliveries[i].done));
- const groupSeq=g=>{const ns=g.indexes.filter(i=>!deliveries[i].done).map(i=>sequenceNumber(deliveries[i])).filter(n=>n!==null);return ns.length?Math.min(...ns):null};
+ const groupSeq=g=>{const ns=g.indexes.filter(i=>!deliveries[i].done).map(i=>sequenceSortValue(deliveries[i])).filter(Number.isFinite);return ns.length?Math.min(...ns):null};
  const known=groups.filter(g=>groupSeq(g)!==null).sort((a,b)=>groupSeq(a)-groupSeq(b));
  const missing=groups.filter(g=>groupSeq(g)===null);
  const result=orderMissingStopGroups(known,missing);
@@ -134,15 +134,22 @@ function toggleMapAssistantVoice(){
 function save(){releaseCompletedAutoDestination();persistManualChoice();persistAutoChoice();localStorage.setItem("rotapro_facil_deliveries",JSON.stringify(deliveries));render();if(document.getElementById("mapModal")?.classList.contains("open"))drawMap()}
 function val(id){return document.getElementById(id)?.value.trim()||""}
 function cleanSequence(v){let s=String(v??"").trim();if(!s||s.toLowerCase()==='nan'||s.toLowerCase()==='null')return "";return s}
-function sequenceNumber(d){let n=Number(cleanSequence(d.sequence));return Number.isFinite(n)&&n>0?n:null}
+function sequenceKey(value){
+ const s=cleanSequence(value);
+ if(!/^\+?[1-9]\d*$/.test(s))return null;
+ const n=Number(s.replace(/^\+/,''));
+ return Number.isSafeInteger(n)&&n>0?(s.startsWith('+')?'+'+n:String(n)):null;
+}
+function sequenceNumber(d){const key=sequenceKey(d.sequence);return key===null?null:Number(key.replace(/^\+/,''))}
+function sequenceSortValue(d){const key=sequenceKey(d.sequence);return key===null?Infinity:Number(key.replace(/^\+/,''))+(key.startsWith('+')?0.5:0)}
 function sequenceLabel(d,i){return cleanSequence(d.sequence)||"Sem Seq."}
 function missingSequenceCount(){return deliveries.filter(d=>!cleanSequence(d.sequence)).length}
-function duplicateSequences(){let mapSeq=new Map();deliveries.forEach((d,i)=>{let s=cleanSequence(d.sequence);if(s){if(!mapSeq.has(s))mapSeq.set(s,[]);mapSeq.get(s).push(i)}});return new Set([...mapSeq.values()].filter(a=>a.length>1).flat())}
+function duplicateSequences(){let mapSeq=new Map();deliveries.forEach((d,i)=>{let s=cleanSequence(d.sequence);if(s){const k=sequenceKey(s)||s;if(!mapSeq.has(k))mapSeq.set(k,[]);mapSeq.get(k).push(i)}});return new Set([...mapSeq.values()].filter(a=>a.length>1).flat())}
 function sequenceIssue(i){let d=deliveries[i];return !cleanSequence(d.sequence)||sequenceNumber(d)===null||duplicateSequences().has(i)}
-function addDelivery(){let client=val("client"),address=cleanDeliveryAddress(val("address")),phone=val("phone"),sequence=cleanSequence(val("manualSequence"));if(!sequence){alert("Informe a Sequence da entrega.");document.getElementById("manualSequence").focus();return}if(!address){alert("Informe o endereço completo da entrega.");document.getElementById("address").focus();return}if(deliveries.some(d=>cleanSequence(d.sequence)===sequence)){alert("A Sequence "+sequence+" já está cadastrada. Informe uma Sequence diferente.");document.getElementById("manualSequence").focus();return}deliveries.push({client:client||"Entrega "+sequence,address,destinationAddress:address,bairro:"",city:"",zip:"",phone,obs:"",code:"",lat:"",lon:"",sequence,originalSequence:sequence,originalStop:"",done:false,routeOrder:""});planFacilSequence();replanFacilWithGeocoding();["client","address","phone","manualSequence"].forEach(id=>document.getElementById(id).value="");save();toast("Entrega "+sequence+" adicionada com sucesso!");document.getElementById("manualSequence").focus()}
+function addDelivery(){let client=val("client"),address=cleanDeliveryAddress(val("address")),phone=val("phone"),sequence=cleanSequence(val("manualSequence"));if(!sequence){alert("Informe a Sequence da entrega.");document.getElementById("manualSequence").focus();return}if(sequenceKey(sequence)===null){alert("Informe uma Sequence válida, como 1 ou +1.");return}if(!address){alert("Informe o endereço completo da entrega.");document.getElementById("address").focus();return}if(deliveries.some(d=>sequenceKey(d.sequence)===sequenceKey(sequence))){alert("A Sequence "+sequence+" já está cadastrada. Informe uma Sequence diferente.");document.getElementById("manualSequence").focus();return}deliveries.push({client:client||"Entrega "+sequence,address,destinationAddress:address,bairro:"",city:"",zip:"",phone,obs:"",code:"",lat:"",lon:"",sequence,originalSequence:sequence,originalStop:"",done:false,routeOrder:""});planFacilSequence();replanFacilWithGeocoding();["client","address","phone","manualSequence"].forEach(id=>document.getElementById(id).value="");save();toast("Entrega "+sequence+" adicionada com sucesso!");document.getElementById("manualSequence").focus()}
 function coords(d){let lat=parseFloat(String(d.lat).replace(",",".")),lon=parseFloat(String(d.lon).replace(",","."));return Number.isFinite(lat)&&Number.isFinite(lon)?[lat,lon]:null}
 function pending(){return deliveries.filter(d=>!d.done)}
-function orderedDeliveries(){let arr=deliveries.map((d,i)=>({...d,_i:i}));if(sortMode==="route")arr.sort((a,b)=>{if(a.done!==b.done)return a.done?1:-1;let ar=Number(a.routeOrder)||999999,br=Number(b.routeOrder)||999999;return ar-br||(localStorage.getItem("rotapro_facil_optimization_mode")==="stops"?a._i-b._i:((sequenceNumber(a)||999999)-(sequenceNumber(b)||999999))||a._i-b._i)});else arr.sort((a,b)=>{let ar=sequenceNumber(a)||999999,br=sequenceNumber(b)||999999;return ar-br||a._i-b._i});return arr}
+function orderedDeliveries(){let arr=deliveries.map((d,i)=>({...d,_i:i}));if(sortMode==="route")arr.sort((a,b)=>{if(a.done!==b.done)return a.done?1:-1;let ar=Number(a.routeOrder)||999999,br=Number(b.routeOrder)||999999;return ar-br||(localStorage.getItem("rotapro_facil_optimization_mode")==="stops"?a._i-b._i:(sequenceSortValue(a)-sequenceSortValue(b))||a._i-b._i)});else arr.sort((a,b)=>{let ar=sequenceSortValue(a),br=sequenceSortValue(b);return ar-br||a._i-b._i});return arr}
 function render(){updateStopCounters();
  const list=document.getElementById("list");list.innerHTML="";const arr=orderedDeliveries();const dup=duplicateSequences();
  arr.forEach(d=>{let i=d._i,e=document.createElement("div");e.className="item"+(d.done?" done":"")+((manualNext===i||(manualNext===null&&autoNext===i))?" next":"")+(sequenceIssue(i)?" seqIssue":"");
@@ -810,8 +817,8 @@ function collectSequenceInputs(){
  const used=new Set();
  for(let i=0;i<values.length;i++){
   const s=values[i];if(!s)continue;
-  if(/[\r\n]/.test(s)||!(Number(s)>0&&Number.isFinite(Number(s)))){alert(`Sequence inválida na entrega ${i+1}. Informe um número positivo ou deixe em branco.`);return null}
-  const key=String(Number(s));if(used.has(key)){alert(`A Sequence ${s} está repetida. Cada entrega deve ter uma Sequence diferente.`);return null}used.add(key);
+  if(sequenceKey(s)===null){alert(`Sequence inválida na entrega ${i+1}. Informe um número positivo ou deixe em branco.`);return null}
+  const key=sequenceKey(s);if(used.has(key)){alert(`A Sequence ${s} está repetida. Cada entrega deve ter uma Sequence diferente.`);return null}used.add(key);
  }
  return values;
 }
@@ -823,12 +830,12 @@ function saveSequences(){
  else{closeSequenceEditor();toast("Todas as Sequence estão conferidas!")}
 }
 function fillMissingSequences(){
- const used=new Set(deliveries.map(d=>Number(cleanSequence(d.sequence))).filter(n=>Number.isInteger(n)&&n>0));
+ const used=new Set(deliveries.map(d=>sequenceKey(d.sequence)).filter(k=>k!==null));
  let next=1,filled=0;
  document.querySelectorAll("#sequenceEditorList .seqInput").forEach(el=>{
   if(cleanSequence(el.value))return;
-  while(used.has(next))next++;
-  el.value=String(next);used.add(next);next++;filled++;
+  while(used.has(String(next)))next++;
+  el.value=String(next);used.add(String(next));next++;filled++;
  });
  updateSequenceEditorStats();toast(filled?`${filled} Sequence(s) sugeridas. Confira antes de salvar.`:"Não há Sequence vazia na lista.");
 }
@@ -848,7 +855,7 @@ document.getElementById("homeSequenceBtn")?.addEventListener("click",openSequenc
 document.getElementById("homeListBtn")?.addEventListener("click",()=>document.getElementById("list")?.scrollIntoView({behavior:"smooth",block:"start"}));
 document.getElementById("homeManualBtn")?.addEventListener("click",()=>document.getElementById("importSection")?.scrollIntoView({behavior:"smooth",block:"center"}));
 document.getElementById("homeClearBtn")?.addEventListener("click",clearAll);
-document.getElementById("file").addEventListener("change",importFile);document.getElementById("optBtn").addEventListener("click",optimizeRoute);document.getElementById("optStopsBtn")?.addEventListener("click",optimizeByStops);document.getElementById("navOptimize").addEventListener("click",optimizeRoute);document.getElementById("clearRouteBtn").addEventListener("click",restoreOriginal);document.getElementById("locateBtn").addEventListener("click",locate);document.getElementById("startMapBtn")?.addEventListener("click",startMapAssistant);document.getElementById("mapVoiceBtn")?.addEventListener("click",toggleMapAssistantVoice);document.getElementById("mapOptimizeBtn")?.addEventListener("click",optimizeRoute);document.getElementById("openMapBtn").addEventListener("click",openMap);document.getElementById("navMap").addEventListener("click",openMap);document.getElementById("closeMap").addEventListener("click",closeMap);document.getElementById("centerMap").addEventListener("click",()=>{followUser=true;if(currentPosition)map.setView(currentPosition,16,{animate:true});else{let d=nextDelivery(),c=d&&coords(d);if(c)map.setView(c,16)}});document.getElementById("showDone").addEventListener("change",e=>{showDone=e.target.checked;drawMap()});document.getElementById("routeTab").addEventListener("click",()=>{sortMode="route";document.getElementById("routeTab").classList.add("active");document.getElementById("originalTab").classList.remove("active");render()});document.getElementById("originalTab").addEventListener("click",()=>{sortMode="original";document.getElementById("originalTab").classList.add("active");document.getElementById("routeTab").classList.remove("active");render()});document.getElementById("nextNavigate").addEventListener("click",()=>{let d=nextDelivery();if(d)navigate(deliveries.indexOf(d))});document.getElementById("nextDone").addEventListener("click",()=>{let d=nextDelivery();if(d)toggle(deliveries.indexOf(d))});document.getElementById("sequenceBtn").addEventListener("click",openSequenceEditor);document.getElementById("closeSequenceModal").addEventListener("click",closeSequenceEditor);document.getElementById("fillSequencesBtn").addEventListener("click",fillMissingSequences);document.getElementById("saveSequencesBtn").addEventListener("click",saveSequences);document.getElementById("sequenceModal").addEventListener("click",e=>{if(e.target.id==="sequenceModal")closeSequenceEditor()});document.getElementById("closeAddressAlertModal")?.addEventListener("click",closeAddressAlerts);document.getElementById("addressAlertModal")?.addEventListener("click",e=>{if(e.target.id==="addressAlertModal")closeAddressAlerts()});if("serviceWorker"in navigator)navigator.serviceWorker.register("sw.js?v=facil1-3-3");updateFollowButton();render();
+document.getElementById("file").addEventListener("change",importFile);document.getElementById("optBtn").addEventListener("click",optimizeRoute);document.getElementById("optStopsBtn")?.addEventListener("click",optimizeByStops);document.getElementById("navOptimize").addEventListener("click",optimizeRoute);document.getElementById("clearRouteBtn").addEventListener("click",restoreOriginal);document.getElementById("locateBtn").addEventListener("click",locate);document.getElementById("startMapBtn")?.addEventListener("click",startMapAssistant);document.getElementById("mapVoiceBtn")?.addEventListener("click",toggleMapAssistantVoice);document.getElementById("mapOptimizeBtn")?.addEventListener("click",optimizeRoute);document.getElementById("openMapBtn").addEventListener("click",openMap);document.getElementById("navMap").addEventListener("click",openMap);document.getElementById("closeMap").addEventListener("click",closeMap);document.getElementById("centerMap").addEventListener("click",()=>{followUser=true;if(currentPosition)map.setView(currentPosition,16,{animate:true});else{let d=nextDelivery(),c=d&&coords(d);if(c)map.setView(c,16)}});document.getElementById("showDone").addEventListener("change",e=>{showDone=e.target.checked;drawMap()});document.getElementById("routeTab").addEventListener("click",()=>{sortMode="route";document.getElementById("routeTab").classList.add("active");document.getElementById("originalTab").classList.remove("active");render()});document.getElementById("originalTab").addEventListener("click",()=>{sortMode="original";document.getElementById("originalTab").classList.add("active");document.getElementById("routeTab").classList.remove("active");render()});document.getElementById("nextNavigate").addEventListener("click",()=>{let d=nextDelivery();if(d)navigate(deliveries.indexOf(d))});document.getElementById("nextDone").addEventListener("click",()=>{let d=nextDelivery();if(d)toggle(deliveries.indexOf(d))});document.getElementById("sequenceBtn").addEventListener("click",openSequenceEditor);document.getElementById("closeSequenceModal").addEventListener("click",closeSequenceEditor);document.getElementById("fillSequencesBtn").addEventListener("click",fillMissingSequences);document.getElementById("saveSequencesBtn").addEventListener("click",saveSequences);document.getElementById("sequenceModal").addEventListener("click",e=>{if(e.target.id==="sequenceModal")closeSequenceEditor()});document.getElementById("closeAddressAlertModal")?.addEventListener("click",closeAddressAlerts);document.getElementById("addressAlertModal")?.addEventListener("click",e=>{if(e.target.id==="addressAlertModal")closeAddressAlerts()});if("serviceWorker"in navigator)navigator.serviceWorker.register("sw.js?v=facil1-3-10");updateFollowButton();render();
 
 // RotaPro 2.4 - instalação PWA
 let deferredInstallPrompt=null;
