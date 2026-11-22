@@ -33,7 +33,10 @@ function planFacilSequence(){
  // Sequence numerada = espinha dorsal; sem Sequence = parada extra por proximidade.
  // Agrupamento por endereco evita separar pacotes no mesmo local.
  const groups=stopGroups().filter(g=>g.indexes.some(i=>!deliveries[i].done));
- const groupSeq=g=>{const ns=g.indexes.filter(i=>!deliveries[i].done).map(i=>sequenceSortValue(deliveries[i])).filter(Number.isFinite);return ns.length?Math.min(...ns):null};
+ const groupSeq=g=>{ // Somente Sequence sem + e uma ancora numerada.
+  const ns=g.indexes.filter(i=>!deliveries[i].done).map(i=>normalSequenceNumber(deliveries[i])).filter(Number.isFinite);
+  return ns.length?Math.min(...ns):null;
+ };
  const known=groups.filter(g=>groupSeq(g)!==null).sort((a,b)=>groupSeq(a)-groupSeq(b));
  const missing=groups.filter(g=>groupSeq(g)===null);
  const result=orderMissingStopGroups(known,missing);
@@ -45,7 +48,7 @@ function planFacilSequence(){
 }
 async function replanFacilWithGeocoding(){
  const groups=stopGroups().filter(g=>g.indexes.some(i=>!deliveries[i].done));
- const missing=groups.filter(g=>g.indexes.every(i=>sequenceNumber(deliveries[i])===null));
+ const missing=groups.filter(g=>!g.indexes.some(i=>!deliveries[i].done&&normalSequenceNumber(deliveries[i])!==null));
  if(missing.some(g=>!stopPoint(g))){
   toast('Localizando entregas sem Sequence para encaixar por proximidade...');
   try{await locateMissingStopGroups(missing)}catch(e){console.warn('Geocodificacao indisponivel',e)}
@@ -141,7 +144,9 @@ function sequenceKey(value){
  return Number.isSafeInteger(n)&&n>0?(s.startsWith('+')?'+'+n:String(n)):null;
 }
 function sequenceNumber(d){const key=sequenceKey(d.sequence);return key===null?null:Number(key.replace(/^\+/,''))}
-function sequenceSortValue(d){const key=sequenceKey(d.sequence);return key===null?Infinity:Number(key.replace(/^\+/,''))+(key.startsWith('+')?0.5:0)}
+// +1, +2 etc sao identificadores de entregas extras, NAO posicoes na rota.
+function normalSequenceNumber(d){const key=sequenceKey(d.sequence);return key!==null&&!key.startsWith('+')?Number(key):null}
+function sequenceSortValue(d){const n=normalSequenceNumber(d);return n===null?Infinity:n}
 function sequenceLabel(d,i){return cleanSequence(d.sequence)||"Sem Seq."}
 function missingSequenceCount(){return deliveries.filter(d=>!cleanSequence(d.sequence)).length}
 function duplicateSequences(){let mapSeq=new Map();deliveries.forEach((d,i)=>{let s=cleanSequence(d.sequence);if(s){const k=sequenceKey(s)||s;if(!mapSeq.has(k))mapSeq.set(k,[]);mapSeq.get(k).push(i)}});return new Set([...mapSeq.values()].filter(a=>a.length>1).flat())}
@@ -855,6 +860,11 @@ document.getElementById("homeSequenceBtn")?.addEventListener("click",openSequenc
 document.getElementById("homeListBtn")?.addEventListener("click",()=>document.getElementById("list")?.scrollIntoView({behavior:"smooth",block:"start"}));
 document.getElementById("homeManualBtn")?.addEventListener("click",()=>document.getElementById("importSection")?.scrollIntoView({behavior:"smooth",block:"center"}));
 document.getElementById("homeClearBtn")?.addEventListener("click",clearAll);
+// Recalcular planos antigos em que +1/+2 eram tratados como 1/2.
+if(deliveries.some(d=>!d.done&&sequenceKey(d.sequence)?.startsWith('+'))){
+  planFacilSequence();
+  replanFacilWithGeocoding().catch(e=>console.warn('Replanejamento de extras:',e));
+}
 document.getElementById("file").addEventListener("change",importFile);document.getElementById("optBtn").addEventListener("click",optimizeRoute);document.getElementById("optStopsBtn")?.addEventListener("click",optimizeByStops);document.getElementById("navOptimize").addEventListener("click",optimizeRoute);document.getElementById("clearRouteBtn").addEventListener("click",restoreOriginal);document.getElementById("locateBtn").addEventListener("click",locate);document.getElementById("startMapBtn")?.addEventListener("click",startMapAssistant);document.getElementById("mapVoiceBtn")?.addEventListener("click",toggleMapAssistantVoice);document.getElementById("mapOptimizeBtn")?.addEventListener("click",optimizeRoute);document.getElementById("openMapBtn").addEventListener("click",openMap);document.getElementById("navMap").addEventListener("click",openMap);document.getElementById("closeMap").addEventListener("click",closeMap);document.getElementById("centerMap").addEventListener("click",()=>{followUser=true;if(currentPosition)map.setView(currentPosition,16,{animate:true});else{let d=nextDelivery(),c=d&&coords(d);if(c)map.setView(c,16)}});document.getElementById("showDone").addEventListener("change",e=>{showDone=e.target.checked;drawMap()});document.getElementById("routeTab").addEventListener("click",()=>{sortMode="route";document.getElementById("routeTab").classList.add("active");document.getElementById("originalTab").classList.remove("active");render()});document.getElementById("originalTab").addEventListener("click",()=>{sortMode="original";document.getElementById("originalTab").classList.add("active");document.getElementById("routeTab").classList.remove("active");render()});document.getElementById("nextNavigate").addEventListener("click",()=>{let d=nextDelivery();if(d)navigate(deliveries.indexOf(d))});document.getElementById("nextDone").addEventListener("click",()=>{let d=nextDelivery();if(d)toggle(deliveries.indexOf(d))});document.getElementById("sequenceBtn").addEventListener("click",openSequenceEditor);document.getElementById("closeSequenceModal").addEventListener("click",closeSequenceEditor);document.getElementById("fillSequencesBtn").addEventListener("click",fillMissingSequences);document.getElementById("saveSequencesBtn").addEventListener("click",saveSequences);document.getElementById("sequenceModal").addEventListener("click",e=>{if(e.target.id==="sequenceModal")closeSequenceEditor()});document.getElementById("closeAddressAlertModal")?.addEventListener("click",closeAddressAlerts);document.getElementById("addressAlertModal")?.addEventListener("click",e=>{if(e.target.id==="addressAlertModal")closeAddressAlerts()});if("serviceWorker"in navigator)navigator.serviceWorker.register("sw.js?v=facil1-3-10");updateFollowButton();render();
 
 // RotaPro 2.4 - instalação PWA

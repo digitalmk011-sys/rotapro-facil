@@ -1,0 +1,6 @@
+RotaPro Facil V1.3.11 - Entregas extras (+1, +2, +3) por proximidade.
+As sequencias normais 1, 2, 3 permanecem na ordem.
+Os valores com + sao identificadores distintos, mas nao definem ordem de visita.
+Extras sao encaixadas perto das paradas normais por coordenadas; sem coordenadas, o app tenta localizar o endereco.
+Se nao localizar, a entrega fica ao final para revisao manual.
+Atualize os arquivos no repositorio rotapro-facil, sem alterar rotapro2.
