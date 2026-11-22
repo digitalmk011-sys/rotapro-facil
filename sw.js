@@ -1,6 +1,6 @@
-const CACHE='rotapro-facil-v1-3-2';
+const CACHE='rotapro-facil-v1-3-3';
 const TILE_CACHE='rotapro-facil-map-v1';
-const ASSETS=['./','./index.html','./style.css','./app.js','./manifest.json','./logo.png','./icon-192.png','./icon-512.png','./header-banner.png','./facil.css','./facil.js',
+const ASSETS=['./','./index.html','./style.css','./app.js','./manifest.json','./logo.png','./icon-192.png','./icon-512.png','./header-banner.png','./facil.css','./facil.js','./aula/01.webp','./aula/02.webp','./aula/03.webp','./aula/04.webp','./aula/05.webp','./aula/06.webp','./aula/07.webp','./aula/08.webp','./aula/09.webp','./aula/10.webp','./aula/11.webp','./aula/12.webp','./aula/13.webp','./aula/14.webp','./aula/15.webp','./aula/16.webp','./aula/17.webp','./aula/18.webp','./aula/19.webp','./aula/20.webp','./aula/21.webp','./aula/22.webp','./aula/23.webp','./aula/24.webp',
  'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css',
  'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js',
  'https://unpkg.com/@tomickigrzegorz/leaflet-rotate@0.2.4/dist/leaflet-rotate.umd.min.js',

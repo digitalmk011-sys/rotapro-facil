@@ -1,0 +1,7 @@
+RotaPro Fácil v1.3.3 - Aula com 24 imagens e narração em português
+
+Extraia o ZIP e envie TODOS os arquivos e a pasta aula ao repositório rotapro-facil (não altere rotapro2).
+Abra o aplicativo e toque em Vamos Aprender?
+A voz é produzida pelo sintetizador de fala do navegador/celular, não por arquivos MP3. Depende de voz pt-BR instalada no aparelho.
+As 24 imagens são armazenadas para uso offline após o carregamento inicial completo e cache do aplicativo.
+Controles: anterior, próximo, ouvir explicação, parar áudio, avançar automaticamente.
