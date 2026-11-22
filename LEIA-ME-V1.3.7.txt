@@ -1,0 +1,3 @@
+RotaPro Fácil V1.3.7
+A narração agora pronuncia Sequence e Sequences como sequência, mantendo os nomes originais na tela e nas planilhas.
+As demais funções permanecem iguais à versão 1.3.6.

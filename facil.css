@@ -53,3 +53,16 @@ body.facil-mode{background:#041631;color:white}body.facil-mode .new-home{max-wid
 .facil-tutorial-card h2,.facil-tutorial-card p{position:absolute!important;width:1px!important;height:1px!important;overflow:hidden!important;clip-path:inset(50%)!important;white-space:nowrap!important;margin:0!important;padding:0!important}
 .facil-audio-controls{display:none!important}
 @media(max-width:380px){.facil-lesson-toolbar{grid-template-columns:minmax(0,1fr) minmax(0,1fr) 34px 34px 30px;gap:3px}.facil-lesson-toolbar button{font-size:11px!important}}
+
+/* V1.3.6: aproveitamento lateral e controles de destaque */
+.facil-tutorial-card{padding-left:1px!important;padding-right:1px!important}
+.facil-lesson-toolbar{grid-template-columns:minmax(0,1.05fr) minmax(0,1fr) minmax(0,.7fr) minmax(0,.7fr) minmax(0,.55fr)!important;gap:4px!important;padding:5px 5px!important;min-height:47px!important}
+.facil-lesson-toolbar button{width:100%!important;height:42px!important;font-size:13px!important;padding:2px 3px!important;border-width:2px!important;border-radius:10px!important}
+#facilPrev{background:linear-gradient(145deg,#00a8ff,#0755d7)!important;border-color:#8ceaff!important;box-shadow:0 2px 9px #00baff80!important}
+#facilNext{background:linear-gradient(145deg,#00c76c,#07833b)!important;border-color:#8bffbd!important;box-shadow:0 2px 9px #15ff8180!important}
+#facilReplay{background:linear-gradient(145deg,#18a5fa,#0050b3)!important;border-color:#8ceaff!important;font-size:19px!important}
+#facilStopAudio{background:linear-gradient(145deg,#ff9c32,#c74313)!important;border-color:#ffce89!important;font-size:19px!important}
+#facilCloseTutorial{background:linear-gradient(145deg,#ed4b66,#a9193a)!important;border-color:#ffb0c1!important;font-size:19px!important}
+.facil-illustration{width:100%!important;border-radius:0!important}
+.facil-illustration img{width:100%!important;height:100%!important;object-fit:fill!important}
+@media(max-width:380px){.facil-lesson-toolbar button{font-size:11px!important}#facilReplay,#facilStopAudio,#facilCloseTutorial{font-size:17px!important}}
